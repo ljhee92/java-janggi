@@ -4,6 +4,8 @@ import db.DatabaseConnector;
 import domain.board.Point;
 import domain.piece.Piece;
 import domain.piece.PieceType;
+import domain.piece.Team;
+import dto.BoardDto;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -22,7 +24,7 @@ public class BoardDaoImpl implements BoardDao {
 
     @Override
     public boolean hasRecords() {
-        final String query = "SELECT COUNT(*) FROM board";
+        final String query = "SELECT 1 FROM board LIMIT 1";
         try (final Connection connection = databaseConnector.getConnection();
              final PreparedStatement preparedStatement = connection.prepareStatement(query)) {
             final ResultSet resultSet = preparedStatement.executeQuery();
@@ -37,9 +39,10 @@ public class BoardDaoImpl implements BoardDao {
     }
 
     @Override
-    public Map<Point, Piece> load(int boardId) {
+    public BoardDto load(int boardId) {
         Map<Point, Piece> board = new HashMap<>();
-        final String query = "SELECT point_row, point_column, team, piece_type FROM board WHERE board_id = ?";
+        Team turn = null;
+        final String query = "SELECT point_row, point_column, team, piece_type, turn FROM board WHERE board_id = ?";
         try (final Connection connection = databaseConnector.getConnection();
              final PreparedStatement preparedStatement = connection.prepareStatement(query)) {
             preparedStatement.setInt(1, boardId);
@@ -49,23 +52,26 @@ public class BoardDaoImpl implements BoardDao {
                 int column = resultSet.getInt("point_column");
                 String team = resultSet.getString("team");
                 String pieceType = resultSet.getString("piece_type");
+                String boardTurn = resultSet.getString("turn");
                 board.put(Point.of(row, column), PieceType.createPiece(team, pieceType));
+                turn = Team.valueOf(boardTurn);
             }
-            return board;
+            return new BoardDto(board, turn);
         } catch (SQLException e) {
             throw new RuntimeException("[ERROR] 보드 기록 조회 중 오류가 발생했습니다. " + e.getMessage(), e);
         }
     }
 
     @Override
-    public void save(final Connection connection, final Point point, final Piece piece, final int boardId) {
-        final String query = "INSERT INTO board (board_id, point_row, point_column, team, piece_type) VALUES(?, ?, ?, ?, ?)";
+    public void save(final Connection connection, final int boardId, final Point point, final Piece piece, final Team turn) {
+        final String query = "INSERT INTO board (board_id, point_row, point_column, team, piece_type, turn) VALUES(?, ?, ?, ?, ?, ?)";
         try (final PreparedStatement preparedStatement = connection.prepareStatement(query)) {
             preparedStatement.setInt(1, boardId);
             preparedStatement.setInt(2, point.row());
             preparedStatement.setInt(3, point.column());
             preparedStatement.setString(4, piece.team().name());
             preparedStatement.setString(5, piece.type().name());
+            preparedStatement.setString(6, turn.name());
             preparedStatement.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("[ERROR] 보드 기록 저장 중 오류가 발생했습니다. " + e.getMessage(), e);
@@ -73,9 +79,10 @@ public class BoardDaoImpl implements BoardDao {
     }
 
     @Override
-    public void remove(final Connection connection, final int boardId) {
+    public void remove(final int boardId) {
         final String query = "DELETE FROM board WHERE board_id = ?";
-        try (final PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+        try (final Connection connection = databaseConnector.getConnection();
+             final PreparedStatement preparedStatement = connection.prepareStatement(query)) {
             preparedStatement.setInt(1, boardId);
             preparedStatement.executeUpdate();
         } catch (SQLException e) {

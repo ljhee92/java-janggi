@@ -2,8 +2,6 @@ package service;
 
 import dao.BoardDao;
 import dao.BoardDaoImpl;
-import dao.TurnDao;
-import dao.TurnDaoImpl;
 import db.DatabaseConnector;
 import domain.board.Point;
 import domain.piece.Piece;
@@ -16,12 +14,10 @@ import java.util.Map;
 public class JanggiService {
 
     private final DatabaseConnector databaseConnector;
-    private final TurnDao turnDao;
     private final BoardDao boardDao;
 
     public JanggiService(final DatabaseConnector databaseConnector) {
         this.databaseConnector = databaseConnector;
-        this.turnDao = new TurnDaoImpl(databaseConnector);
         this.boardDao = new BoardDaoImpl(databaseConnector);
     }
 
@@ -30,11 +26,11 @@ public class JanggiService {
     }
 
     public Map<Point, Piece> findBoard(final int boardId) {
-        return boardDao.load(boardId);
+        return boardDao.load(boardId).board();
     }
 
-    public Team findTurn() {
-        return turnDao.load();
+    public Team findTurn(final int boardId) {
+        return boardDao.load(boardId).team();
     }
 
     public void saveAllData(final Map<Point, Piece> board, final Team turn, final int boardId) {
@@ -42,9 +38,8 @@ public class JanggiService {
             connection.setAutoCommit(false);
 
             removeAllData(boardId);
-            turnDao.save(connection, turn);
             for (Point point : board.keySet()) {
-                boardDao.save(connection, point, board.get(point), boardId);
+                boardDao.save(connection, boardId, point, board.get(point), turn);
             }
 
             connection.commit();
@@ -54,15 +49,6 @@ public class JanggiService {
     }
 
     public void removeAllData(final int boardId) {
-        try (Connection connection = databaseConnector.getConnection()) {
-            connection.setAutoCommit(false);
-
-            turnDao.remove(connection);
-            boardDao.remove(connection, boardId);
-
-            connection.commit();
-        } catch (SQLException e) {
-            throw new RuntimeException("[ERROR] DB 작업이 실패했습니다. " + e.getMessage(), e);
-        }
+        boardDao.remove(boardId);
     }
 }

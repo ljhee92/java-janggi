@@ -33,15 +33,12 @@ class JanggiServiceTest {
     void setUp() {
         janggiService = new JanggiService(new H2DatabaseConnector());
         createBoardTable();
-        createTurnTable();
         insertBoard();
-        insertTurn();
     }
 
     @AfterEach
     void tearDown() {
         dropBoardTable();
-        dropTurnTable();
     }
 
     private void createBoardTable() {
@@ -51,7 +48,8 @@ class JanggiServiceTest {
                     	point_row       INT NOT NULL,
                     	point_column    INT NOT NULL,
                     	team            VARCHAR(3) NOT NULL,
-                    	piece_type       VARCHAR(6) NOT NULL,
+                    	piece_type      VARCHAR(6) NOT NULL,
+                        turn            VARCHAR(3) NOT NULL,
                     	PRIMARY KEY (board_id, point_row, point_column)
                     );
                     """;
@@ -64,36 +62,12 @@ class JanggiServiceTest {
     }
 
     private void insertBoard() {
-        String query = "INSERT INTO board (board_id, point_row, point_column, team, piece_type) VALUES(1, 1, 1, 'CHO', 'PO')";
+        String query = "INSERT INTO board (board_id, point_row, point_column, team, piece_type, turn) VALUES(1, 1, 1, 'CHO', 'PO', 'CHO')";
         try (final Connection connection = new H2DatabaseConnector().getConnection();
              final PreparedStatement preparedStatement = connection.prepareStatement(query)) {
             preparedStatement.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("[ERROR] H2 Board 초기 데이터 삽입 오류: " + e.getMessage(), e);
-        }
-    }
-
-    private void createTurnTable() {
-        String query = """
-                    CREATE TABLE IF NOT EXISTS `turn` (
-                        turn VARCHAR(3) PRIMARY KEY
-                    );
-                    """;
-        try (final Connection connection = new H2DatabaseConnector().getConnection();
-             final PreparedStatement preparedStatement = connection.prepareStatement(query)) {
-            preparedStatement.execute();
-        } catch (SQLException e) {
-            throw new RuntimeException("[ERROR] H2 Turn 테이블 생성 오류: " + e.getMessage(), e);
-        }
-    }
-
-    private void insertTurn() {
-        String query = "INSERT INTO turn (turn) VALUES('CHO')";
-        try (final Connection connection = new H2DatabaseConnector().getConnection();
-             final PreparedStatement preparedStatement = connection.prepareStatement(query)) {
-            preparedStatement.executeUpdate();
-        } catch (SQLException e) {
-            throw new RuntimeException("[ERROR] H2 Turn 초기 데이터 삽입 오류: " + e.getMessage(), e);
         }
     }
 
@@ -104,16 +78,6 @@ class JanggiServiceTest {
             preparedStatement.execute();
         } catch (SQLException e) {
             throw new RuntimeException("[ERROR] H2 Board 테이블 드랍 오류: " + e.getMessage(), e);
-        }
-    }
-
-    private void dropTurnTable() {
-        String query = "DROP table turn";
-        try (final Connection connection = new H2DatabaseConnector().getConnection();
-             final PreparedStatement preparedStatement = connection.prepareStatement(query)) {
-            preparedStatement.execute();
-        } catch (SQLException e) {
-            throw new RuntimeException("[ERROR] H2 Turn 테이블 드랍 오류: " + e.getMessage(), e);
         }
     }
 
@@ -135,7 +99,7 @@ class JanggiServiceTest {
 
     @Test
     void 턴을_조회할_수_있다() {
-        assertThat(janggiService.findTurn()).isNotNull();
+        assertThat(janggiService.findTurn(DEFAULT_BOARD_ID)).isNotNull();
     }
 
     @Test

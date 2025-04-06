@@ -35,7 +35,7 @@ public class JanggiController {
 
     private JanggiGame initializeJanggiGame() {
         if (janggiService.hasSavedGame() && inputView.selectLoadGame()) {
-            return new JanggiGame(janggiService.findBoard(BOARD_ID), janggiService.findTurn());
+            return new JanggiGame(janggiService.findBoard(BOARD_ID), janggiService.findTurn(BOARD_ID));
         }
         final SangMaOrderCommand hanSangMaOrderCommand = createSangMaOrderCommandByTeam(Team.HAN);
         final SangMaOrderCommand choSangMaOrderCommand = createSangMaOrderCommandByTeam(Team.CHO);

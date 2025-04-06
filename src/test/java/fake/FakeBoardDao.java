@@ -5,6 +5,7 @@ import domain.board.Point;
 import domain.piece.Piece;
 import domain.piece.Team;
 import domain.piece.Wang;
+import dto.BoardDto;
 
 import java.sql.Connection;
 import java.util.HashMap;
@@ -12,10 +13,13 @@ import java.util.Map;
 
 public class FakeBoardDao implements BoardDao {
 
-    private final Map<Integer, Map<Point, Piece>> board = new HashMap<>(
-            Map.of(1, new HashMap<>(Map.of(
-                    Point.of(2, 5), new Wang(Team.HAN),
-                    Point.of(9, 5), new Wang(Team.CHO))
+    private final Map<Integer, BoardDto> board = new HashMap<>(
+            Map.of(1, new BoardDto(
+                    new HashMap<>(Map.of(
+                            Point.of(2, 5), new Wang(Team.HAN),
+                            Point.of(9, 5), new Wang(Team.CHO)
+                    )),
+                    Team.CHO
             ))
     );
 
@@ -25,18 +29,18 @@ public class FakeBoardDao implements BoardDao {
     }
 
     @Override
-    public Map<Point, Piece> load(final int boardId) {
+    public BoardDto load(final int boardId) {
         return board.get(boardId);
     }
 
     @Override
-    public void save(final Connection connection, final Point point, final Piece piece, final int boardId) {
-        board.put(boardId, Map.of(point, piece));
+    public void save(final Connection connection, final int boardId, final Point point, final Piece piece, final Team turn) {
+        board.put(boardId, new BoardDto(Map.of(point, piece), turn));
     }
 
     @Override
-    public void remove(final Connection connection, final int boardId) {
-        board.get(boardId).clear();
+    public void remove(final int boardId) {
+        board.remove(boardId);
     }
 
     @Override

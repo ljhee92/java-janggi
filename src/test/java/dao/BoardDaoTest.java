@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@DisplayName("Board Dao 테스트")
+@DisplayName("Board Dao2 테스트")
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
 class BoardDaoTest {
 
@@ -40,22 +40,27 @@ class BoardDaoTest {
 
     @Test
     void 보드번호로_보드를_조회할_수_있다() {
-        assertThat(boardDao.load(DEFAULT_BOARD_ID)).hasSize(2);
+        assertThat(boardDao.load(DEFAULT_BOARD_ID).board()).hasSize(2);
+    }
+
+    @Test
+    void 보드번호로_턴을_조회할_수_있다() {
+        assertThat(boardDao.load(DEFAULT_BOARD_ID).team()).isEqualTo(Team.CHO);
     }
 
     @Test
     void 보드를_저장할_수_있다() {
         Point point = Point.of(1, 1);
         Piece sa = new Sa(Team.HAN);
-        boardDao.save(null, point, sa, DEFAULT_BOARD_ID);
+        boardDao.save(null, DEFAULT_BOARD_ID, point, sa, Team.CHO);
 
-        assertThat(boardDao.load(DEFAULT_BOARD_ID).get(point)).isEqualTo(sa);
+        assertThat(boardDao.load(DEFAULT_BOARD_ID).board().get(point)).isEqualTo(sa);
     }
 
     @Test
     void 보드번호로_보드를_삭제할_수_있다() {
-        boardDao.remove(null, DEFAULT_BOARD_ID);
+        boardDao.remove(DEFAULT_BOARD_ID);
 
-        assertThat(boardDao.load(DEFAULT_BOARD_ID)).hasSize(0);
+        assertThat(boardDao.load(DEFAULT_BOARD_ID)).isNull();
     }
 }
