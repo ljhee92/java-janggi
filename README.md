@@ -1,5 +1,33 @@
 # java-janggi
 
+## 프로그램 실행 방법
+- 이 프로그램은 실행 전 Database 연결이 필요합니다.
+```
+# 경로 이동(docker-compose.yml 파일이 있는 경로로 이동)
+cd java-janggi/docker
+
+# Docker 컨테이너 실행
+docker-compose -p janggi up -d
+
+# Docker 컨테이너 종료
+docker-compose -p janggi down
+```
+
+- Database의 구조에 변경이 있을 경우 아래와 같은 설정이 필요합니다.
+```
+# 경로 이동(docker-compose.yml 파일이 있는 경로로 이동)
+cd java-janggi/docker
+
+# Docker 컨테이너 종료
+docker-compose -p janggi down
+
+# data 파일 삭제
+rm -rf ./db/mysql/data
+
+# Docker 컨테이너 실행
+docker-compose -p janggi up -d
+```
+
 ## 프로그램 실행 흐름
 
 ### 프로그램 시작
